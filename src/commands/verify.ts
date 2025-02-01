@@ -19,7 +19,6 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   const email = interaction.options.getString("email", true);
-
   let isWaitListed = "Not Waitlisted";
 
   try {
@@ -37,6 +36,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           );
           if (role) {
             await member.roles.add(role).catch(console.error);
+            await interaction.reply({
+              content: "You have been successfully verified",
+              ephemeral: true,
+            });            
           }
         } else {
           console.error("Member is not of type GuildMember.");
