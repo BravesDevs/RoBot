@@ -1,10 +1,13 @@
 import {
+  APIInteractionGuildMember,
   ChatInputCommandInteraction,
   GuildMember,
   SlashCommandBuilder,
 } from "discord.js";
 import { isEmailWaitListed } from "../helpers/query";
 import { getConnection } from "../helpers/dbConn";
+
+let waitlistedMembers: (GuildMember | APIInteractionGuildMember | null)[] = [];
 
 const conn = getConnection();
 export const data = new SlashCommandBuilder()
@@ -22,6 +25,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   let isWaitListed = "Not Waitlisted";
 
   try {
+    if (waitlistedMembers.length > 0 && waitlistedMembers.includes(interaction.member)) {
+      await interaction.reply({
+        content: "You are already verified",
+        flags: "Ephemeral",
+      });
+      return;
+    }
+
     const results = (await isEmailWaitListed(email)) as {
       isWaitListed: boolean;
     }[];
@@ -38,8 +49,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             await member.roles.add(role).catch(console.error);
             await interaction.reply({
               content: "You have been successfully verified",
-              ephemeral: true,
-            });            
+              flags: "Ephemeral",
+            });   
+            
+            waitlistedMembers.push(member);
+            
           }
         } else {
           console.error("Member is not of type GuildMember.");
@@ -55,13 +69,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     console.error("Error checking if email is waitlisted:", err);
     await interaction.reply({
       content: "Error checking if email is waitlisted",
-      ephemeral: true,
+      flags: "Ephemeral",
     });
     return;
   }
-
-  await interaction.reply({
-    content: `Your email is: ${isWaitListed}`,
-    ephemeral: true,
-  });
 }
