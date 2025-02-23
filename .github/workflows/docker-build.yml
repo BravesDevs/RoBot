@@ -1,0 +1,30 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            --build-arg DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }} \
+            --build-arg OTHER_VARIABLE=${{ secrets.OTHER_VARIABLE }} \
+            -t ${{ secrets.DOCKER_HUB_USERNAME }}/your-repo-name:latest .
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/your-repo-name:latest
